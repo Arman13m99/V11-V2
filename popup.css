@@ -1,0 +1,308 @@
+/* Enhanced popup.css - Professional Persian UI */
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    width: 320px;
+    min-height: 500px;
+    font-family: 'Vazirmatn', 'Tahoma', sans-serif;
+    direction: rtl;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #333;
+    overflow-x: hidden;
+}
+
+.container {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header Section */
+.header-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+    text-align: center;
+    color: white;
+}
+
+img {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+h1 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: white;
+}
+
+/* Description Section */
+.description {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.description h2 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.description p {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.5;
+    text-align: center;
+}
+
+/* Features Section */
+.features {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.feature {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.feature:hover {
+    background: rgba(102, 126, 234, 0.05);
+    transform: translateY(-1px);
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+.feature .icon {
+    font-size: 18px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.feature div {
+    flex: 1;
+}
+
+.feature strong {
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.feature p {
+    font-size: 11px;
+    color: #666;
+    margin: 0;
+    line-height: 1.3;
+    text-align: right;
+}
+
+/* Status Section */
+.status {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    font-size: 12px;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #dc3545;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.status-indicator.active {
+    background: #28a745;
+    box-shadow: 0 0 8px rgba(40, 167, 69, 0.4);
+}
+
+.status-item span:last-child {
+    color: #555;
+    line-height: 1.4;
+}
+
+/* Instructions Section */
+.instructions {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    flex: 1;
+}
+
+.instructions h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 12px;
+}
+
+.instructions ol {
+    padding-right: 16px;
+    margin: 0;
+}
+
+.instructions li {
+    font-size: 11px;
+    color: #555;
+    line-height: 1.5;
+    margin-bottom: 8px;
+}
+
+.instructions li:last-child {
+    margin-bottom: 0;
+}
+
+/* Version Section */
+.version {
+    padding: 12px 20px;
+    text-align: center;
+    font-size: 10px;
+    color: #888;
+    background: rgba(0, 0, 0, 0.02);
+    border-top: 1px solid #f0f0f0;
+}
+
+/* Enhanced Status Styles */
+.status-item.success {
+    background: rgba(40, 167, 69, 0.1);
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin: 4px 0;
+}
+
+.status-item.error {
+    background: rgba(220, 53, 69, 0.1);
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin: 4px 0;
+}
+
+.status-item.warning {
+    background: rgba(255, 193, 7, 0.1);
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin: 4px 0;
+}
+
+/* Loading Animation */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.loading {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Smooth Scrolling */
+.container {
+    scroll-behavior: smooth;
+}
+
+/* Enhanced Feature Hover Effects */
+.feature:active {
+    transform: scale(0.98);
+}
+
+/* Responsive Design */
+@media (max-width: 340px) {
+    body {
+        width: 300px;
+    }
+    
+    .container {
+        padding: 0;
+    }
+    
+    .feature {
+        gap: 8px;
+    }
+    
+    .feature .icon {
+        width: 28px;
+        height: 28px;
+        font-size: 16px;
+    }
+}
+
+/* Dark Mode Support (if needed) */
+@media (prefers-color-scheme: dark) {
+    .container {
+        background: rgba(30, 30, 30, 0.95);
+        color: #e0e0e0;
+    }
+    
+    .description h2,
+    .instructions h3,
+    .feature strong {
+        color: #f0f0f0;
+    }
+    
+    .description p,
+    .feature p,
+    .instructions li,
+    .status-item span:last-child {
+        color: #b0b0b0;
+    }
+}
+
+/* Accessibility Improvements */
+.feature:focus {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
+.status-indicator {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Enhanced Visual Hierarchy */
+.description {
+    background: rgba(102, 126, 234, 0.02);
+}
+
+.features {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.status {
+    background: rgba(0, 0, 0, 0.01);
+}
