@@ -251,7 +251,7 @@ GET /search/vendors?q={query}                 # Vendor search
 - **Advanced Caching**: Intelligent cache invalidation
 - **Performance Monitoring**: Real-time performance metrics
 
-## 📞 Support & Contributing
+## Support & Contributing
 
 ### Getting Help
 - **Issues**: Report bugs via GitHub issues
@@ -264,21 +264,6 @@ GET /search/vendors?q={query}                 # Vendor search
 3. Commit changes (`git commit -m 'Add amazing feature'`)
 4. Push to branch (`git push origin feature/amazing-feature`)
 5. Open Pull Request
-
-### Development Setup
-```bash
-# Install development dependencies
-npm install
-
-# Run tests
-npm test
-
-# Build for production
-npm run build
-
-# Start development server
-npm run dev
-```
 
 ## 📄 License
 
