@@ -328,66 +328,115 @@ function extractVendorCodeFromUrl(url, platform) {
     }
 }
 
+// ===== ENHANCED RATING EXTRACTION SYSTEM =====
+// Fixed version based on actual SnappFood HTML structure
+
+// Enhanced Persian to Western number conversion
 const PERSIAN_TO_WESTERN_MAP = {
-    '۰': '0',
-    '۱': '1',
-    '۲': '2',
-    '۳': '3',
-    '۴': '4',
-    '۵': '5',
-    '۶': '6',
-    '۷': '7',
-    '۸': '8',
-    '۹': '9'
+    '۰': '0', '۱': '1', '۲': '2', '۳': '3', '۴': '4',
+    '۵': '5', '۶': '6', '۷': '7', '۸': '8', '۹': '9'
 };
 
 const persianToWesternCache = new Map();
 
 function persianToWestern(str) {
+    if (!str) return str;
+    
     if (persianToWesternCache.has(str)) {
         return persianToWesternCache.get(str);
     }
-
-    let result = str;
+    
+    let result = str.toString();
     for (const [persian, western] of Object.entries(PERSIAN_TO_WESTERN_MAP)) {
         result = result.replace(new RegExp(persian, 'g'), western);
     }
-
+    
     persianToWesternCache.set(str, result);
     return result;
 }
 
+// ===== FIXED RATING EXTRACTION FUNCTION =====
 function extractRatingFromElement(element) {
-    if (!element) return null;
-
-    const textContent = element.textContent;
-    if (!textContent.trim()) return null;
-
-    const westernText = persianToWestern(textContent);
-
-    const patterns = [
-        /(\d+\.?\d*)\s*(?:\(.*امتیاز\)|★|⭐)/,
-        /(\d+\.?\d*)\s*(?:از\s*\d+|\/\d+)/,
-        /امتیاز[:\s]*(\d+\.?\d*)/i
-    ];
-
-    for (const pattern of patterns) {
-        const match = westernText.match(pattern);
-        if (match) {
-            const rating = parseFloat(match[1]);
-            if (rating >= 0 && rating <= 10) return rating;
-        }
+    if (!element) {
+        console.log('🔍 No element provided for rating extraction');
+        return null;
     }
-
-    const ratingElements = element.querySelectorAll('.sc-hKgILt.jsaCNc, [class*="rating"]');
-    for (const ratingEl of ratingElements) {
-        const ratingText = persianToWestern(ratingEl.textContent.trim());
-        const rating = parseFloat(ratingText);
-        if (rating && !isNaN(rating) && rating >= 0 && rating <= 10) {
+    
+    console.log('🔍 Extracting rating from element:', element);
+    
+    // Strategy 1: Direct CSS selector for SnappFood's rating element
+    const ratingElement = element.querySelector('.sc-hKgILt.jsaCNc');
+    if (ratingElement) {
+        const ratingText = ratingElement.textContent.trim();
+        console.log('🎯 Found rating element:', ratingText);
+        
+        const westernText = persianToWestern(ratingText);
+        const rating = parseFloat(westernText);
+        
+        if (!isNaN(rating) && rating >= 0 && rating <= 10) {
+            console.log('✅ Successfully extracted rating:', rating);
             return rating;
         }
     }
-
+    
+    // Strategy 2: Look for RateCommentBadge container
+    const rateContainer = element.querySelector('.RateCommentBadge__RateBox-sc-olkjn5-0');
+    if (rateContainer) {
+        // Look for rating text within the container
+        const ratingSpan = rateContainer.querySelector('span.sc-hKgILt.jsaCNc');
+        if (ratingSpan) {
+            const ratingText = ratingSpan.textContent.trim();
+            console.log('🎯 Found rating in container:', ratingText);
+            
+            const westernText = persianToWestern(ratingText);
+            const rating = parseFloat(westernText);
+            
+            if (!isNaN(rating) && rating >= 0 && rating <= 10) {
+                console.log('✅ Successfully extracted rating from container:', rating);
+                return rating;
+            }
+        }
+    }
+    
+    // Strategy 3: Text-based search with Persian support
+    const elementText = element.textContent || '';
+    console.log('🔍 Searching in element text:', elementText.substring(0, 200) + '...');
+    
+    // Convert entire text to western numbers first
+    const westernText = persianToWestern(elementText);
+    
+    // Look for rating patterns
+    const ratingPatterns = [
+        /(\d+\.?\d*)\s*امتیاز/,           // "4.7 امتیاز"
+        /(\d+\.?\d*)\s*\(/,              // "4.7 (" before comment count
+        /(\d+\.?\d*)\s*⭐/,              // "4.7 ⭐"
+        /(\d+\.?\d*)\s*★/,               // "4.7 ★"
+    ];
+    
+    for (const pattern of ratingPatterns) {
+        const match = westernText.match(pattern);
+        if (match) {
+            const rating = parseFloat(match[1]);
+            if (!isNaN(rating) && rating >= 0 && rating <= 10) {
+                console.log('✅ Successfully extracted rating via pattern:', rating, 'from:', match[0]);
+                return rating;
+            }
+        }
+    }
+    
+    // Strategy 4: Look for any decimal number that could be a rating
+    const decimalMatches = westernText.match(/\d+\.\d+/g);
+    if (decimalMatches) {
+        for (const match of decimalMatches) {
+            const rating = parseFloat(match);
+            if (rating >= 3.0 && rating <= 5.0) { // Likely rating range
+                console.log('✅ Found likely rating via decimal search:', rating);
+                return rating;
+            }
+        }
+    }
+    
+    console.log('❌ No rating found in element');
     return null;
 }
 
@@ -1384,50 +1433,80 @@ function getComparisonText(data) {
     }
 }
 
+// ===== ENHANCED VENDOR PROCESSING WITH BETTER DEBUGGING =====
 function processVendorElements() {
     const startTime = performance.now();
-    console.log('🔄 Optimized vendor processing starting...');
-
-    const restaurantLinks = state.domCache.get('a[href*="/restaurant/menu/"]');
+    console.log('🔄 Enhanced vendor processing starting...');
+    
+    // Batch query for all restaurant links
+    const restaurantLinks = document.querySelectorAll('a[href*="/restaurant/menu/"]');
     console.log(`📍 Found ${restaurantLinks.length} restaurant menu links`);
-
+    
     if (restaurantLinks.length === 0) {
         console.log('❌ No restaurant links found - page might not be loaded yet');
         return;
     }
-
+    
+    console.log(`📊 Processing with ${state.pairedVendors.size} paired vendors in database`);
+    
     let totalHighlighted = 0;
+    let totalWithRatings = 0;
+    let totalHighRated = 0;
     const processedCodes = new Set();
-
+    
+    // Process in chunks for better performance
     const processChunk = (links, startIndex, chunkSize = 20) => {
         const endIndex = Math.min(startIndex + chunkSize, links.length);
-
+        
         for (let i = startIndex; i < endIndex; i++) {
             const link = links[i];
             const vendorCode = extractVendorCodeFromUrl(link.href, 'snappfood');
-
+            
             if (vendorCode && !processedCodes.has(vendorCode)) {
                 processedCodes.add(vendorCode);
-
-                if (state.pairedVendors.has(vendorCode)) {
-                    const container = findBestContainer(link);
-                    if (container) {
-                        const rating = extractRatingFromElement(container);
+                
+                console.log(`🔍 Processing vendor ${vendorCode} (${i + 1}/${links.length})`);
+                
+                const container = findBestContainer(link);
+                if (container) {
+                    const rating = extractRatingFromElement(container);
+                    
+                    if (rating !== null) {
+                        totalWithRatings++;
+                        if (rating >= 4.5) {
+                            totalHighRated++;
+                        }
+                    }
+                    
+                    // Check if vendor should be highlighted
+                    const isPaired = state.pairedVendors.has(vendorCode);
+                    const isHighRated = rating && rating >= 4.5;
+                    
+                    if (isPaired || isHighRated) {
                         highlightVendor(container, vendorCode, rating);
                         totalHighlighted++;
                     }
                 }
             }
         }
-
+        
+        // Continue processing if there are more items
         if (endIndex < links.length) {
             requestIdleCallback(() => processChunk(links, endIndex, chunkSize));
         } else {
             const processTime = performance.now() - startTime;
-            console.log(`✅ Optimized processing complete. Highlighted: ${totalHighlighted}, Time: ${processTime.toFixed(2)}ms`);
+            console.log(`✅ Enhanced processing complete:`, {
+                totalProcessed: processedCodes.size,
+                totalHighlighted,
+                totalWithRatings,
+                totalHighRated,
+                pairedVendorsInDB: state.pairedVendors.size,
+                processTime: `${processTime.toFixed(2)}ms`
+            });
         }
     };
-
+    
+    // Start processing
     requestIdleCallback(() => processChunk(restaurantLinks, 0));
 }
 
@@ -1454,72 +1533,92 @@ function findBestContainer(link) {
     return container;
 }
 
-// ✅ FIXED: Added a fallback container to prevent "No image wrapper found" and ensure the badge appears.
+// ===== ENHANCED VENDOR HIGHLIGHTING WITH BETTER DEBUGGING =====
 function highlightVendor(vendorElement, vendorCode, rating) {
     const uniqueId = `${vendorCode}-${rating || 'no-rating'}`;
-    if (!vendorElement || state.processedVendors.has(uniqueId)) return;
-
+    
+    // Prevent duplicate processing
+    if (!vendorElement || state.processedVendors.has(uniqueId)) {
+        return;
+    }
+    
     const isPaired = state.pairedVendors.has(vendorCode);
-    const isVeryHighRating = rating && rating > 4.5;
-
-    console.log(`🔍 Processing vendor ${vendorCode}:`, { isPaired, rating, isVeryHighRating });
-
+    const isVeryHighRating = rating && rating >= 4.5; // 4.5+ threshold
+    
+    console.log(`🔍 Processing vendor ${vendorCode}:`, {
+        isPaired,
+        rating,
+        isVeryHighRating,
+        ratingThreshold: 4.5
+    });
+    
+    // Find the actual card box for border highlighting
     const cardBox = vendorElement.querySelector('.VendorCard__VendorBox-sc-6qaz7-0');
-
-    const addPairedBadge = () => {
-        const imageWrapper = vendorElement.querySelector('.VendorCard__ImgWrapper-sc-6qaz7-2');
-        const infoContainer = vendorElement.querySelector('.VendorCard__Bottom-sc-6qaz7-5');
-
-        if (!imageWrapper && !infoContainer) {
-            console.log(`❌ No suitable container found for paired badge on vendor ${vendorCode}`);
-            return;
-        }
-
-        const pairedBadge = createProfessionalBadge('paired');
-        if (imageWrapper) {
-            pairedBadge.style.position = 'absolute';
-            pairedBadge.style.bottom = '70px';
-            pairedBadge.style.left = '8px';
-            pairedBadge.style.right = '8px';
-            pairedBadge.style.zIndex = '5';
-            pairedBadge.style.marginTop = '0';
-            imageWrapper.style.position = 'relative';
-            imageWrapper.appendChild(pairedBadge);
-            console.log(`🔗 Added professional paired badge to image wrapper for vendor ${vendorCode}`);
-        } else {
-            pairedBadge.style.position = 'static';
-            pairedBadge.style.width = 'fit-content';
-            infoContainer.appendChild(pairedBadge);
-            console.log(`🔗 Added fallback professional paired badge to info container for vendor ${vendorCode}`);
-        }
-    };
-
+    
+    // Handle very high rating (4.5+) - Star badge on top-left + yellow border
     if (isVeryHighRating) {
-        if (getComputedStyle(vendorElement).position === 'static') {
+        console.log(`⭐ Applying hot recommendation styling for vendor ${vendorCode} (rating: ${rating})`);
+        
+        // Ensure element can contain absolutely positioned badge
+        if (vendorElement.style.position !== 'relative' && vendorElement.style.position !== 'absolute') {
             vendorElement.style.position = 'relative';
         }
-
+        
+        // Apply yellow border to the card box
         if (cardBox) {
             cardBox.classList.add('sp-vs-tp-vendor-hot-recommendation');
+            console.log(`🟡 Added yellow border class to vendor ${vendorCode}`);
+        } else {
+            console.warn(`❌ No card box found for vendor ${vendorCode}`);
         }
-
+        
+        // Add star badge to top-left
         const starBadge = createStarBadge();
         vendorElement.appendChild(starBadge);
         console.log(`⭐ Added star badge for high-rated vendor ${vendorCode} (${rating})`);
-
+        
+        // If also paired, add professional badge to image wrapper area
         if (isPaired) {
-            addPairedBadge();
+            console.log(`🔗 Vendor ${vendorCode} is both high-rated AND paired - adding both badges`);
+            addPairedBadge(vendorElement, vendorCode);
         }
-    } else if (isPaired) {
+    }
+    // Handle just paired vendors (no special rating) - Green border + professional badge
+    else if (isPaired) {
+        console.log(`🔗 Applying paired vendor styling for vendor ${vendorCode} (rating: ${rating || 'N/A'})`);
+        
+        // Apply green border to the card box
         if (cardBox) {
             cardBox.classList.add('sp-vs-tp-vendor-paired');
+            console.log(`🟢 Added green border class to vendor ${vendorCode}`);
+        } else {
+            console.warn(`❌ No card box found for paired vendor ${vendorCode}`);
         }
-        addPairedBadge();
-    } else {
+        
+        addPairedBadge(vendorElement, vendorCode);
+    }
+    else {
         console.log(`⚪ No highlighting for vendor ${vendorCode} - rating: ${rating || 'N/A'}, paired: ${isPaired}`);
     }
-
+    
     state.processedVendors.add(uniqueId);
+}
+function addPairedBadge(vendorElement, vendorCode) {
+    const imageWrapper = vendorElement.querySelector('.VendorCard__ImgWrapper-sc-6qaz7-2');
+    if (imageWrapper) {
+        const pairedBadge = createProfessionalBadge('paired');
+        // Position it closer to SnappFood's badge
+        pairedBadge.style.position = 'absolute';
+        pairedBadge.style.bottom = '70px'; 
+        pairedBadge.style.left = '8px';
+        pairedBadge.style.right = '8px';
+        pairedBadge.style.zIndex = '5';
+        imageWrapper.style.position = 'relative';
+        imageWrapper.appendChild(pairedBadge);
+        console.log(`🔗 Added professional paired badge for vendor ${vendorCode}`);
+    } else {
+        console.warn(`❌ No image wrapper found for paired vendor ${vendorCode}`);
+    }
 }
 
 
